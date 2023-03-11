@@ -1,33 +1,96 @@
-import React, { Component } from 'react';
+import { useState, useEffect } from 'react';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import threeDots from './Loader/Loader';
 import { GlobalStyle } from './GlobalStyle';
-import ImageGallery from './ImageGallery/ImageGallery';
 import { Layout } from './Layout';
+
+import ImageGallery from './ImageGallery/ImageGallery';
 import Searchbar from './Searchbar/Searchbar';
 import { Modal } from './Modal/Modal';
+import { getImages } from 'services/getImages';
+import { Items } from 'components/ImageGalleryItem/ImageGalleryItem';
+import { Button } from 'components/Button/Button';
 
-export default class App extends Component {
-  state = {
-    imageSearch: '',
+export default function App({ toggleModal, modalImage, showModal }) {
+
+  const [imageSearch, setImageSearch] = useState(null);
+  const [imageArray, setImageArray] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [page, setPage] = useState(1);
+  const [, setError] = useState(null);
+  const [loadMoreBtnShown, setLoadMoreBtnShown] = useState(true);
+
+
+  const handleSubmit = imageSearch => {
+    setImageSearch(imageSearch);
+    setPage(1);
+    setImageArray([]);
   };
 
-  handleSubmit = imageSearch => {
-    this.setState({ imageSearch });
+  const onLoadMoreBtn = () => {
+    setPage(page => page + 1);
+    setLoading(true);
   };
 
+   useEffect(() => {
+     if (imageSearch === null) {
+       return;
+     }
 
-  render() {
-    const { imageSearch, modalImage, showModal } = this.state;
+     getImages(imageSearch, page)
+       .then(data => {
+         if (data.total === 0) {
+           setLoading(false);
+           return toast.error(`Nothing was found for ${imageSearch}`, {
+             position: toast.POSITION.TOP_CENTER,
+           });
+         }
 
-    return (
-      <Layout>
-        <Searchbar onSearch={this.handleSubmit} />
-        <ImageGallery value={imageSearch} />
-        {showModal && modalImage && (
-          <Modal onClose={this.toggleModal} modalImage={this.modalImage} />
-        )}
+         if (data.hits.length < 12) {
+           setLoadMoreBtnShown(false);
+         }
 
-        <GlobalStyle />
-      </Layout>
-    );
-  }
+         setImageArray(prevState => [...prevState, ...data.hits]);
+         setLoading(false);
+       })
+       .catch(error => {
+         setError(error);
+       });
+
+
+   }, [imageSearch, page]);
+
+
+
+  return (
+    <Layout>
+      <Searchbar onSearch={handleSubmit} />
+
+      {imageArray.length > 0 && (
+        <ImageGallery>
+          {imageArray.map(item => (
+            <Items key={item.id} items={item} />
+          ))}
+        </ImageGallery>
+      )}
+
+      {showModal && modalImage && (
+        <Modal onClose={toggleModal} modalImage={modalImage} />
+      )}
+
+      {imageArray.length > 0 && !loading && loadMoreBtnShown && (
+        <Button onLoadMore={onLoadMoreBtn} />
+      )}
+
+      {loading && threeDots}
+      <ToastContainer autoClose={1500} />
+
+      <GlobalStyle />
+    </Layout>
+  );
+
 }
+
+
+

@@ -1,34 +1,29 @@
-import React, { Component } from 'react';
+import {useState } from 'react';
 import { Modal } from '../Modal/Modal';
 import { Item, Image } from './ImageGalleryItem.styled';
 import PropTypes from 'prop-types';
 
-export class Items extends Component {
-  state = {
-    showModal: false,
+export function Items({ items }) {
+  const [showModal, setShowModal] = useState(false);
+
+  const toggleModal = () => {
+    setShowModal(!showModal);
   };
 
-  toggleModal = () => {
-    this.setState(({ showModal }) => ({
-      showModal: !showModal,
-    }));
-  };
+  const { webformatURL, tags, largeImageURL} = items;
+  return (
+    <Item key={items.id}>
+      <Image src={webformatURL} alt={tags} onClick={toggleModal} />
 
-  render() {
-    const { webformatURL, tags, largeImageURL } = this.props.items;
-    return (
-      <Item>
-        <Image src={webformatURL} alt={tags} onClick={this.toggleModal} />
-
-        {this.state.showModal && (
-          <Modal
-            onClose={this.toggleModal}
-            imageUrl={largeImageURL}
-            imageTags={tags}
-          />)}
-      </Item>
-    );
-  }
+      {showModal && (
+        <Modal
+          onClose={toggleModal}
+          imageUrl={largeImageURL}
+          imageTags={tags}
+        />
+      )}
+    </Item>
+  );
 }
 
 Items.propTypes = {
@@ -38,3 +33,4 @@ Items.propTypes = {
     largeImageURL: PropTypes.string.isRequired,
   }),
 };
+
