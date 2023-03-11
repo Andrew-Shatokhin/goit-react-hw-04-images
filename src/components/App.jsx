@@ -7,12 +7,10 @@ import { Layout } from './Layout';
 
 import ImageGallery from './ImageGallery/ImageGallery';
 import Searchbar from './Searchbar/Searchbar';
-import { Modal } from './Modal/Modal';
 import { getImages } from 'services/getImages';
-import { Items } from 'components/ImageGalleryItem/ImageGalleryItem';
 import { Button } from 'components/Button/Button';
 
-export default function App({ toggleModal, modalImage, showModal }) {
+export default function App() {
 
   const [imageSearch, setImageSearch] = useState(null);
   const [imageArray, setImageArray] = useState([]);
@@ -66,18 +64,8 @@ export default function App({ toggleModal, modalImage, showModal }) {
   return (
     <Layout>
       <Searchbar onSearch={handleSubmit} />
+      <ImageGallery images={imageArray} />
 
-      {imageArray.length > 0 && (
-        <ImageGallery>
-          {imageArray.map(item => (
-            <Items key={item.id} items={item} />
-          ))}
-        </ImageGallery>
-      )}
-
-      {showModal && modalImage && (
-        <Modal onClose={toggleModal} modalImage={modalImage} />
-      )}
 
       {imageArray.length > 0 && !loading && loadMoreBtnShown && (
         <Button onLoadMore={onLoadMoreBtn} />
